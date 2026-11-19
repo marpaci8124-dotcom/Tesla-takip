@@ -1,0 +1,34 @@
+name: Tesla ikinci el takip
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tesla-takip
+  cancel-in-progress: false
+
+jobs:
+  tara:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install curl_cffi
+      - name: Envanteri tara
+        env:
+          NTFY_KONU: ${{ secrets.NTFY_KONU }}
+        run: python tesla_takip.py --tek
+      - name: Durumu kaydet
+        run: |
+          git config user.name "tesla-bot"
+          git config user.email "tesla-bot@users.noreply.github.com"
+          git add tesla_gorulen.json
+          git diff --cached --quiet || (git commit -m "durum" && git push)
